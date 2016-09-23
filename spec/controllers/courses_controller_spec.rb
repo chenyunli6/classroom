@@ -53,6 +53,12 @@ RSpec.describe CoursesController, type: :controller do
         expect(response).to render_template("new")
       end
 
+      it_behaves_like "require_sign_in" do
+        let (:action) {
+          get :new
+        }
+      end
+
     end
 
     context "when user not login" do
@@ -65,42 +71,76 @@ RSpec.describe CoursesController, type: :controller do
   end
 
   describe "POST create" do
+
+    let(:user) { FactoryGirl.create(:user) }
+
     context "when course doesn't have a title " do
+
+      before { sign_in_user }
+
+
       it "doesn't create a record" do
-        expect { post :create, params: { course: {:description => "bar"}}}.to change{Course.count}.by(0)
+        expect{ post :create, course: {:description => "bar"} }.to change{Course.count}.by(0)
       end
 
+
       it "render new template" do
-        post :create, params:{ course: {:description => "bar"}}
+        post :create, course: {:description => "bar"}
         expect(response).to render_template("new")
       end
     end
 
-    context "when course have a title"
-    it "create a new course record" do
-      course = FactoryGirl.build(:course)
-      expect{ post :create, params: { course: FactoryGirl.attributes_for(:course)} }.to change{ Course.count}.by(1)
-    end
+    context "when course have a title " do
+      before { sign_in_user }
+      it "create a new course record" do
+        course = FactoryGirl.build(:course)
+        expect{ post :create, course: FactoryGirl.attributes_for(:course)}.to change{ Course.count}.by(1)
+      end
 
-    it "redirect to courses_path" do
-      course = FactoryGirl.build(:course)
-      post :create,  params:{ course: FactoryGirl.attributes_for(:course) }
-      expect(response).to redirect_to courses_path
+      it "redirect to courses_path" do
+        course = FactoryGirl.build(:course)
+        post :create, course: FactoryGirl.attributes_for(:course)
+        expect(response).to redirect_to courses_path
+      end
+
+      it "create a course for user" do
+        course = FactoryGirl.build(:course)
+        post :create, course: FactoryGirl.attributes_for(:course)
+        expect(Course.last.user).to eq(user)
+      end
     end
   end
 
   describe "GET edit" do
+
+    let(:user) { FactoryGirl.create(:user) }
+    let(:course_with_owner) { FactoryGirl.create(:course, user: user )}
+    let(:course_without_owner)  { FactoryGirl.create(:course )}
+    before { sign_in_user }
+
     it "assign course" do
-      course = FactoryGirl.create(:course)
-      get :edit , :id => course.id
-      expect(assigns[:course]).to eq(course)
+      get :edit , id: course_with_owner.id
+      expect(assigns[:course]).to eq(course_with_owner)
     end
 
     it "render template" do
-      course = FactoryGirl.create(:course)
-      get :edit , :id => course.id
+      get :edit , id: course_with_owner.id
       expect(response).to render_template("edit")
     end
+
+
+    it_behaves_like "require_course_owner" do
+      let (:action) {
+        get :edit , id: course_without_owner.id
+      }
+    end
+
+    it_behaves_like "require_sign_in" do
+      let (:action) {
+        get :edit , id: course_without_owner.id
+      }
+    end
+
   end
 
   describe "PUT update" do

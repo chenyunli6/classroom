@@ -6,9 +6,10 @@ FactoryGirl.define do
     password "password"
     password_confirmation { password }
   end
-  
+
   factory :course do
-    description "Description."
-    title "Course Name"
+    description "Couese Description."
+    title "Course Title"
+    user
   end
 end
