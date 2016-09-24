@@ -7,6 +7,11 @@ require 'spec_helper'
 require 'rspec/rails'
 
 Dir[Rails.root.join("spec/support/**/*.rb")].sort.each { |file| require file }
+
+# Add this to load Capybara integration:
+require 'capybara/rspec'
+require 'capybara/rails'
+
 # Add additional requires below this line. Rails is not loaded until this point!
 
 # Requires supporting ruby files with custom matchers and macros, etc, in

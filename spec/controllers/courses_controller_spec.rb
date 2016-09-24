@@ -144,84 +144,89 @@ RSpec.describe CoursesController, type: :controller do
   end
 
   describe "PUT update" do
-    it "assign @course" do
-      course = FactoryGirl.create(:course)
-      put :update , id: course.id, course: { title: "Title", description: "Description" }
-      expect(assigns[:course]).to eq(course)
-    end
 
-    it "changes value" do
-      course = FactoryGirl.create(:course)
-      put :update , id: course.id, course: { title: "Title", description: "Description" }
-      expect(assigns[:course].title).to eq("Title")
-      expect(assigns[:course].description).to eq("Description")
-    end
+    let(:user) { FactoryGirl.create(:user) }
+    let(:course_with_owner) { FactoryGirl.create(:course, user: user )}
+    let(:course_without_owner)  { FactoryGirl.create(:course )}
+    before { sign_in_user }
 
-    it "redirect_to course_path" do
-      course = FactoryGirl.create(:course)
-      put :update , id: course.id, course: { title: "Title", description: "Description" }
-      expect(response).to redirect_to course_path(course)
-    end
-  end
-
-  describe "PUT update" do
-    context "when course have title" do
+    context "when course has title" do
 
       it "assign @course" do
-        course = FactoryGirl.create(:course)
-        put :update , id: course.id, course: { title: "Title", description: "Description" }
-        expect(assigns[:course]).to eq(course)
+        put :update , id: course_with_owner.id, course: { title: "Title", description: "Description" }
+        expect(assigns[:course]).to eq(course_with_owner)
       end
 
       it "changes value" do
-        course = FactoryGirl.create(:course)
-        put :update , id: course.id, course: { title: "Title", description: "Description" }
+        put :update , id: course_with_owner.id, course: { title: "Title", description: "Description" }
         expect(assigns[:course].title).to eq("Title")
         expect(assigns[:course].description).to eq("Description")
       end
 
       it "redirect_to course_path" do
-        course = FactoryGirl.create(:course)
-        put :update , id: course.id, course: { title: "Title", description: "Description" }
-        expect(response).to redirect_to course_path(course)
+        put :update , id: course_with_owner.id, course: { title: "Title", description: "Description" }
+        expect(response).to redirect_to course_path(course_with_owner)
       end
 
     end
 
     context "when course doesn't have title " do
       it "doesn't update a record " do
-        course = FactoryGirl.create(:course)
-        put :update , id: course.id, course: { title: "", description: "Description" }
+        put :update , id: course_with_owner.id, course: { title: "", description: "Description" }
 
-        expect(course.description).not_to eq("Description")
+        expect(course_with_owner.description).not_to eq("Description")
       end
 
       it "render edit template" do
-
-        course = FactoryGirl.create(:course)
-        put :update , id: course.id, course: { title: "", description: "Description" }
+        put :update , id: course_with_owner.id, course: { title: "", description: "Description" }
         expect(response).to render_template("edit")
       end
     end
+
+
+
+    it_behaves_like "require_course_owner" do
+      let (:action) {
+        put :update , id: course_without_owner.id, course: { title: "Title", description: "Description" }
+      }
+    end
+
+    it_behaves_like "require_sign_in" do
+      let (:action) {
+        put :update , id: course_without_owner.id, course: { title: "Title", description: "Description" }
+      }
+    end
+
   end
 
   describe "DELETE destroy" do
+
+
+    let(:user) { FactoryGirl.create(:user) }
+    let!(:course) { FactoryGirl.create(:course, user: user )}
+
+    before { sign_in_user }
+
     it "assigns @course" do
-      course = FactoryGirl.create(:course)
       delete :destroy, id: course.id
       expect(assigns[:course]).to eq(course)
     end
 
     it "delete a record" do
-      course = FactoryGirl.create(:course)
       expect { delete :destroy, id: course.id }.to change{Course.count}.by(-1)
     end
 
     it "redirect to courses_path" do
-      course = FactoryGirl.create(:course)
       delete :destroy, id: course.id
       expect(response).to redirect_to courses_path
     end
+
+    it_behaves_like "require_sign_in" do
+      let (:action) {
+        delete :destroy, id: course.id
+      }
+    end
+
   end
 
   describe "Homepage" do
