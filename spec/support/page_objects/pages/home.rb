@@ -7,6 +7,11 @@ module PageObjects
         visit "/"
         self
       end
+
+      def add_course
+        click_on "New course"
+        PageObjects::Courses::Form.new
+      end
     end
   end
 end
